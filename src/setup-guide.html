@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설정 가이드 - Splunk & FortiNet 연동</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0f1c 0%, #1a2332 100%);
+            color: #fff;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        .header {
+            background: rgba(0,0,0,0.4);
+            padding: 30px 20px;
+            border-bottom: 3px solid #4CAF50;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 300;
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+        .header .subtitle {
+            color: #bbb;
+            font-size: 18px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .guide-section {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(15px);
+        }
+        .section-title {
+            font-size: 28px;
+            margin-bottom: 25px;
+            color: #4CAF50;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .step-container {
+            display: grid;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        .step-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 30px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .step-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.1);
+        }
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: 30px;
+            background: #4CAF50;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        .step-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 20px;
+            margin-top: 10px;
+        }
+        .step-content {
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+        .code-block {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            color: #e6edf3;
+            overflow-x: auto;
+            margin: 15px 0;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .copy-btn:hover {
+            background: #2ea043;
+        }
+        .warning-box {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #fff3cd;
+        }
+        .info-box {
+            background: rgba(23, 162, 184, 0.1);
+            border: 1px solid #17a2b8;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #d1ecf1;
+        }
+        .success-box {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid #28a745;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #d4edda;
+        }
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .screenshot-placeholder {
+            background: rgba(255,255,255,0.05);
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            color: #aaa;
+            font-style: italic;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+        }
+        .nav-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        .nav-btn.secondary {
+            background: #6c757d;
+        }
+        .nav-btn.secondary:hover {
+            background: #5a6268;
+        }
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+            .nav-buttons {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 Splunk & FortiNet 연동 설정 가이드</h1>
+        <div class="subtitle">단계별 상세 설정 방법 - 5분 만에 완료하기</div>
+    </div>
+
+    <div class="container">
+        <!-- 1. Splunk 설정 -->
+        <div class="guide-section">
+            <h2 class="section-title">🎯 1단계: Splunk 설정</h2>
+
+            <div class="step-container">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">HEC (HTTP Event Collector) 활성화</h3>
+                    <div class="step-content">
+                        Splunk Web UI에서 데이터 수집을 위한 HEC를 설정합니다.
+                    </div>
+
+                    <div class="two-column">
+                        <div>
+                            <h4 style="color: #4CAF50; margin-bottom: 15px;">📍 접속 경로</h4>
+                            <div class="code-block">
+Settings → Data Inputs → HTTP Event Collector → New Token</div>
+                        </div>
+                        <div class="screenshot-placeholder">
+                            Splunk HEC 설정 화면
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">토큰 생성 및 설정</h3>
+                    <div class="step-content">
+                        FortiManager 데이터 수집을 위한 전용 토큰을 생성합니다.
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+Name: FortiManager-PolicyLookup
+Source Type: fortimanager_policy
+Index: fortimanager
+Enable Indexer Acknowledgment: Yes</div>
+
+                    <div class="warning-box">
+                        <strong>⚠️ 주의사항:</strong> 생성된 토큰 값은 안전한 곳에 보관하세요. 재확인이 불가능합니다.
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">Index 생성</h3>
+                    <div class="step-content">
+                        FortiManager 데이터를 저장할 전용 인덱스를 생성합니다.
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+# CLI 명령어
+./splunk add index fortimanager
+
+# 또는 Web UI에서:
+# Settings → Indexes → New Index
+# Index Name: fortimanager
+# Max Size: 10GB (권장)
+# Max Buckets: Hot=10, Warm=20</div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h3 class="step-title">대시보드 XML 설치</h3>
+                    <div class="step-content">
+                        제공된 XML 코드를 사용하여 대시보드를 생성합니다.
+                    </div>
+
+                    <div class="two-column">
+                        <div>
+                            <h4 style="color: #4CAF50; margin-bottom: 15px;">📍 접속 경로</h4>
+                            <div class="code-block">
+Settings → User Interface → Views → New View → Advanced XML</div>
+                        </div>
+                        <div>
+                            <div class="success-box">
+                                <strong>✅ 완료 후:</strong> Apps → Search & Reporting에서 대시보드 확인 가능
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. FortiNet 설정 -->
+        <div class="guide-section">
+            <h2 class="section-title">🛡️ 2단계: FortiNet 설정</h2>
+
+            <div class="step-container">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">FortiManager API 활성화</h3>
+                    <div class="step-content">
+                        Policy Lookup 기능을 사용하기 위해 FortiManager에서 API 접근을 활성화합니다.
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+# FortiManager CLI에서 실행
+config system admin setting
+    set gui-curl-timeout 120
+    set gui-polling-interval 10
+    set show_add_multiple 1
+end
+
+# JSON API 활성화
+config system global
+    set fmg-status enable
+end</div>
+
+                    <div class="info-box">
+                        <strong>📝 참고:</strong> FortiManager 6.0 이상에서 JSON API가 기본 지원됩니다.
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">Policy Lookup 설정</h3>
+                    <div class="step-content">
+                        각 방화벽에서 Policy Lookup 기능을 활성화합니다.
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+# FortiGate CLI에서 실행
+config system settings
+    set gui-policy-lookup enable
+end
+
+# 또는 GUI에서:
+# System → Feature Visibility → Policy Lookup 체크</div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">로깅 설정</h3>
+                    <div class="step-content">
+                        보안 이벤트와 트래픽 로그를 FortiManager로 전송하도록 설정합니다.
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+config log fortianalyzer setting
+    set status enable
+    set server "192.168.1.100"  # FortiManager IP
+    set source-ip "192.168.1.10"
+    set upload-option realtime
+end
+
+config log setting
+    set fwpolicy-implicit-log enable
+    set local-in-allow enable
+    set local-in-deny-broadcast enable
+end</div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h3 class="step-title">데이터 전송 스크립트</h3>
+                    <div class="step-content">
+                        FortiManager에서 Splunk로 데이터를 전송하는 Python 스크립트를 설정합니다.
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+#!/usr/bin/env python3
+import requests
+import json
+import time
+
+# Splunk HEC 설정
+SPLUNK_HEC_URL = "https://your-splunk-server:8088/services/collector/event"
+SPLUNK_TOKEN = "YOUR_HEC_TOKEN_HERE"
+
+# FortiManager 설정
+FMG_URL = "https://your-fortimanager:443/jsonrpc"
+FMG_USER = "admin"
+FMG_PASS = "password"
+
+def send_to_splunk(event_data):
+    headers = {
+        'Authorization': f'Splunk {SPLUNK_TOKEN}',
+        'Content-Type': 'application/json'
+    }
+
+    payload = {
+        "time": int(time.time()),
+        "source": "FortiManager",
+        "sourcetype": "fortimanager_policy",
+        "event": event_data
+    }
+
+    response = requests.post(SPLUNK_HEC_URL,
+                           headers=headers,
+                           data=json.dumps(payload),
+                           verify=False)
+    return response.status_code == 200
+
+# 사용 예시
+if __name__ == "__main__":
+    sample_event = {
+        "device": "PERIMETER-FW-001",
+        "src_ip": "192.168.1.100",
+        "dst_ip": "10.0.50.200",
+        "service": "HTTPS",
+        "policy_id": 1842,
+        "action": "ALLOW",
+        "lookup_time_ms": 45
+    }
+
+    if send_to_splunk(sample_event):
+        print("✅ 이벤트 전송 성공!")
+    else:
+        print("❌ 이벤트 전송 실패!")</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 테스트 및 검증 -->
+        <div class="guide-section">
+            <h2 class="section-title">✅ 3단계: 테스트 및 검증</h2>
+
+            <div class="step-container">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">연결 테스트</h3>
+                    <div class="step-content">
+                        설정된 연동이 정상적으로 작동하는지 테스트합니다.
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+# HEC 연결 테스트
+curl -k https://your-splunk-server:8088/services/collector/event \
+  -H "Authorization: Splunk YOUR_TOKEN" \
+  -d '{"event": {"test": "connection", "timestamp": "'$(date)'"}, "sourcetype": "fortimanager_policy"}'
+
+# 응답 예시:
+# {"text":"Success","code":0}</div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">데이터 확인</h3>
+                    <div class="step-content">
+                        Splunk에서 수집된 데이터를 검색하여 확인합니다.
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+# Splunk Search 명령어
+index=fortimanager sourcetype=fortimanager_policy
+| head 10
+| table _time, device, src_ip, dst_ip, action
+
+# 최근 1시간 Policy Lookup 통계
+index=fortimanager sourcetype=policy_lookup
+| timechart span=5m count by device_name</div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">대시보드 확인</h3>
+                    <div class="step-content">
+                        생성된 대시보드가 정상적으로 작동하는지 확인합니다.
+                    </div>
+
+                    <div class="success-box">
+                        <strong>✅ 확인 사항:</strong>
+                        <ul style="margin: 10px 0 0 20px;">
+                            <li>Device Health Status 패널에 데이터 표시</li>
+                            <li>Policy Lookup 차트에 실시간 업데이트</li>
+                            <li>Security Events 테이블에 로그 표시</li>
+                            <li>새로고침 시 데이터 자동 업데이트</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. 문제 해결 -->
+        <div class="guide-section">
+            <h2 class="section-title">🔧 4단계: 문제 해결</h2>
+
+            <div class="step-container">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">데이터가 수집되지 않는 경우</h3>
+                    <div class="step-content">
+                        가장 흔한 문제들과 해결 방법을 확인하세요.
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+# 1. HEC 상태 확인
+./splunk list httpinput
+
+# 2. 인덱스 상태 확인
+./splunk list index
+
+# 3. 방화벽 규칙 확인 (8088 포트)
+iptables -L | grep 8088
+
+# 4. SSL 인증서 문제 해결
+curl -k -v https://splunk-server:8088/services/collector/event</div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">대시보드가 로드되지 않는 경우</h3>
+                    <div class="step-content">
+                        XML 구문 오류나 권한 문제를 해결합니다.
+                    </div>
+
+                    <div class="warning-box">
+                        <strong>⚠️ 일반적인 문제:</strong>
+                        <ul style="margin: 10px 0 0 20px;">
+                            <li>XML 구문 오류 (태그 불일치, 특수문자)</li>
+                            <li>sourcetype 불일치</li>
+                            <li>인덱스 권한 문제</li>
+                            <li>앱 권한 설정</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">성능 최적화</h3>
+                    <div class="step-content">
+                        대량의 데이터 처리를 위한 성능 최적화 방법입니다.
+                    </div>
+
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+# indexes.conf 최적화
+[fortimanager]
+maxTotalDataSizeMB = 10000
+maxDataSize = auto_high_volume
+maxHotBuckets = 10
+maxWarmDBCount = 20
+
+# props.conf 설정
+[fortimanager_policy]
+SHOULD_LINEMERGE = false
+KV_MODE = json
+category = Security
+TRUNCATE = 0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="/" class="nav-btn secondary">← 메인 대시보드</a>
+            <a href="/xml-demo" class="nav-btn">XML 복사하기 →</a>
+        </div>
+    </div>
+
+    <script>
+        function copyCode(button) {
+            const codeBlock = button.parentElement;
+            const text = codeBlock.textContent.replace('Copy', '').trim();
+
+            navigator.clipboard.writeText(text).then(() => {
+                button.textContent = '✓ Copied!';
+                button.style.background = '#28a745';
+
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                    button.style.background = '#238636';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

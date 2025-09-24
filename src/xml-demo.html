@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Splunk XML Dashboard Demo - FortiManager Integration</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1e2c3e 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        .header {
+            background: rgba(0,0,0,0.4);
+            padding: 20px;
+            border-bottom: 2px solid #4CAF50;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 400;
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+        .header .subtitle {
+            color: #bbb;
+            font-size: 16px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        .demo-section {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .section-title {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #4CAF50;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .xml-container {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            position: relative;
+            margin: 20px 0;
+        }
+        .xml-header {
+            background: #161b22;
+            padding: 15px 20px;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .xml-title {
+            font-weight: 600;
+            color: #f0f6fc;
+            font-size: 14px;
+        }
+        .copy-btn {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .copy-btn:hover {
+            background: #2ea043;
+            transform: translateY(-1px);
+        }
+        .copy-btn.copied {
+            background: #1f6feb;
+        }
+        .xml-code {
+            padding: 20px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #e6edf3;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .xml-tag { color: #7ee787; }
+        .xml-attr { color: #79c0ff; }
+        .xml-value { color: #ffa657; }
+        .xml-comment { color: #8b949e; font-style: italic; }
+        .xml-text { color: #e6edf3; }
+
+        .preview-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .dashboard-preview {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .preview-title {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #4CAF50;
+            text-align: center;
+        }
+
+        .mock-panel {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .mock-chart {
+            height: 120px;
+            background: linear-gradient(45deg, #2d3748, #4a5568);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #a0aec0;
+            font-size: 14px;
+        }
+
+        .instructions {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .instructions h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            line-height: 1.6;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .usage-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #4CAF50;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 768px) {
+            .preview-section {
+                grid-template-columns: 1fr;
+            }
+            .usage-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛡️ Splunk XML Dashboard Generator</h1>
+        <div class="subtitle">FortiManager Security Operations - Ready-to-Use XML Templates</div>
+    </div>
+
+    <div class="container">
+        <div class="usage-stats">
+            <div class="stat-card">
+                <div class="stat-number">1,055</div>
+                <div class="stat-label">Managed Devices</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">42K+</div>
+                <div class="stat-label">Security Policies</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">98.7%</div>
+                <div class="stat-label">System Uptime</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">2.4TB</div>
+                <div class="stat-label">Daily Traffic</div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>📝 사용 방법</h3>
+            <ol>
+                <li><strong>XML 코드 복사</strong>: 아래 "Copy XML" 버튼을 클릭하여 대시보드 XML을 복사하세요</li>
+                <li><strong>Splunk에 붙여넣기</strong>: Splunk > Settings > User Interface > Views > New View에서 XML 붙여넣기</li>
+                <li><strong>데이터 설정</strong>: FortiManager HEC 토큰과 인덱스를 설정하세요</li>
+                <li><strong>대시보드 실행</strong>: 실시간 보안 모니터링이 시작됩니다!</li>
+            </ol>
+        </div>
+
+        <div class="demo-section">
+            <h2 class="section-title">📊 Complete FortiManager Dashboard XML</h2>
+
+            <div class="preview-section">
+                <div class="dashboard-preview">
+                    <div class="preview-title">Dashboard Preview</div>
+                    <div class="mock-panel">
+                        <div class="mock-chart">Device Health Status - 98.7%</div>
+                    </div>
+                    <div class="mock-panel">
+                        <div class="mock-chart">Policy Lookup Requests</div>
+                    </div>
+                    <div class="mock-panel">
+                        <div class="mock-chart">Security Event Distribution</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-preview">
+                    <div class="preview-title">Real-time Monitoring</div>
+                    <div class="mock-panel">
+                        <div class="mock-chart">Traffic Flow Analysis</div>
+                    </div>
+                    <div class="mock-panel">
+                        <div class="mock-chart">Threat Detection</div>
+                    </div>
+                    <div class="mock-panel">
+                        <div class="mock-chart">Performance Metrics</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="xml-container">
+                <div class="xml-header">
+                    <div class="xml-title">🔥 FortiManager_Enterprise_Dashboard.xml</div>
+                    <button class="copy-btn" onclick="copyXML('complete-dashboard')">Copy XML</button>
+                </div>
+                <div class="xml-code" id="complete-dashboard"><span class="xml-comment">&lt;!-- Enterprise FortiManager Security Operations Dashboard --&gt;</span>
+<span class="xml-tag">&lt;dashboard</span> <span class="xml-attr">version=</span><span class="xml-value">"1.1"</span> <span class="xml-attr">theme=</span><span class="xml-value">"dark"</span><span class="xml-tag">&gt;</span>
+  <span class="xml-tag">&lt;label&gt;</span>FortiManager Security Operations Dashboard<span class="xml-tag">&lt;/label&gt;</span>
+  <span class="xml-tag">&lt;description&gt;</span>Enterprise-grade security monitoring for 1000+ devices with Policy Lookup automation<span class="xml-tag">&lt;/description&gt;</span>
+
+  <span class="xml-comment">&lt;!-- Device Health Overview --&gt;</span>
+  <span class="xml-tag">&lt;row&gt;</span>
+    <span class="xml-tag">&lt;panel&gt;</span>
+      <span class="xml-tag">&lt;title&gt;</span>🛡️ Device Health Status<span class="xml-tag">&lt;/title&gt;</span>
+      <span class="xml-tag">&lt;single&gt;</span>
+        <span class="xml-tag">&lt;search&gt;</span>
+          <span class="xml-tag">&lt;query&gt;</span>
+            index=fortimanager sourcetype=fmg_device_status
+            | stats count(eval(status="up")) as up_count, count as total
+            | eval percentage=round(up_count/total*100,2)
+            | fields percentage
+          <span class="xml-tag">&lt;/query&gt;</span>
+          <span class="xml-tag">&lt;earliest&gt;</span>-5m<span class="xml-tag">&lt;/earliest&gt;</span>
+          <span class="xml-tag">&lt;latest&gt;</span>now<span class="xml-tag">&lt;/latest&gt;</span>
+          <span class="xml-tag">&lt;refresh&gt;</span>30s<span class="xml-tag">&lt;/refresh&gt;</span>
+        <span class="xml-tag">&lt;/search&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"drilldown"</span><span class="xml-tag">&gt;</span>none<span class="xml-tag">&lt;/option&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"underLabel"</span><span class="xml-tag">&gt;</span>Device Availability<span class="xml-tag">&lt;/option&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"unit"</span><span class="xml-tag">&gt;</span>%<span class="xml-tag">&lt;/option&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"rangeColors"</span><span class="xml-tag">&gt;</span>["0xDC4E41","0xF1813F","0x53A051"]<span class="xml-tag">&lt;/option&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"rangeValues"</span><span class="xml-tag">&gt;</span>[0,95,98]<span class="xml-tag">&lt;/option&gt;</span>
+      <span class="xml-tag">&lt;/single&gt;</span>
+    <span class="xml-tag">&lt;/panel&gt;</span>
+
+    <span class="xml-tag">&lt;panel&gt;</span>
+      <span class="xml-tag">&lt;title&gt;</span>🔥 Active Policies<span class="xml-tag">&lt;/title&gt;</span>
+      <span class="xml-tag">&lt;single&gt;</span>
+        <span class="xml-tag">&lt;search&gt;</span>
+          <span class="xml-tag">&lt;query&gt;</span>
+            index=fortimanager sourcetype=policy_lookup
+            | stats dc(policy_id) as active_policies
+          <span class="xml-tag">&lt;/query&gt;</span>
+          <span class="xml-tag">&lt;earliest&gt;</span>-1h<span class="xml-tag">&lt;/earliest&gt;</span>
+          <span class="xml-tag">&lt;latest&gt;</span>now<span class="xml-tag">&lt;/latest&gt;</span>
+        <span class="xml-tag">&lt;/search&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"underLabel"</span><span class="xml-tag">&gt;</span>Security Policies<span class="xml-tag">&lt;/option&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"colorBy"</span><span class="xml-tag">&gt;</span>value<span class="xml-tag">&lt;/option&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"colorMode"</span><span class="xml-tag">&gt;</span>categorical<span class="xml-tag">&lt;/option&gt;</span>
+      <span class="xml-tag">&lt;/single&gt;</span>
+    <span class="xml-tag">&lt;/panel&gt;</span>
+  <span class="xml-tag">&lt;/row&gt;</span>
+
+  <span class="xml-comment">&lt;!-- Policy Lookup Activity --&gt;</span>
+  <span class="xml-tag">&lt;row&gt;</span>
+    <span class="xml-tag">&lt;panel&gt;</span>
+      <span class="xml-tag">&lt;title&gt;</span>📊 Policy Lookup Requests (Real-time)<span class="xml-tag">&lt;/title&gt;</span>
+      <span class="xml-tag">&lt;chart&gt;</span>
+        <span class="xml-tag">&lt;search&gt;</span>
+          <span class="xml-tag">&lt;query&gt;</span>
+            index=fortimanager sourcetype=policy_lookup
+            | timechart span=1m count by device_name
+            | fillnull value=0
+          <span class="xml-tag">&lt;/query&gt;</span>
+          <span class="xml-tag">&lt;earliest&gt;</span>-1h<span class="xml-tag">&lt;/earliest&gt;</span>
+          <span class="xml-tag">&lt;latest&gt;</span>now<span class="xml-tag">&lt;/latest&gt;</span>
+          <span class="xml-tag">&lt;refresh&gt;</span>1m<span class="xml-tag">&lt;/refresh&gt;</span>
+        <span class="xml-tag">&lt;/search&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"charting.chart"</span><span class="xml-tag">&gt;</span>area<span class="xml-tag">&lt;/option&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"charting.axisTitleX.text"</span><span class="xml-tag">&gt;</span>Time<span class="xml-tag">&lt;/option&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"charting.axisTitleY.text"</span><span class="xml-tag">&gt;</span>Lookup Requests<span class="xml-tag">&lt;/option&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"charting.legend.placement"</span><span class="xml-tag">&gt;</span>right<span class="xml-tag">&lt;/option&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"charting.chart.stackMode"</span><span class="xml-tag">&gt;</span>stacked<span class="xml-tag">&lt;/option&gt;</span>
+      <span class="xml-tag">&lt;/chart&gt;</span>
+    <span class="xml-tag">&lt;/panel&gt;</span>
+  <span class="xml-tag">&lt;/row&gt;</span>
+
+  <span class="xml-comment">&lt;!-- Security Events Analysis --&gt;</span>
+  <span class="xml-tag">&lt;row&gt;</span>
+    <span class="xml-tag">&lt;panel&gt;</span>
+      <span class="xml-tag">&lt;title&gt;</span>🔒 Security Event Distribution<span class="xml-tag">&lt;/title&gt;</span>
+      <span class="xml-tag">&lt;viz</span> <span class="xml-attr">type=</span><span class="xml-value">"sankey_diagram_app.sankey_diagram"</span><span class="xml-tag">&gt;</span>
+        <span class="xml-tag">&lt;search&gt;</span>
+          <span class="xml-tag">&lt;query&gt;</span>
+            index=fortimanager sourcetype=security_events
+            | stats count by src_zone, dst_zone, action
+            | sort -count
+            | head 20
+          <span class="xml-tag">&lt;/query&gt;</span>
+          <span class="xml-tag">&lt;earliest&gt;</span>-24h<span class="xml-tag">&lt;/earliest&gt;</span>
+          <span class="xml-tag">&lt;latest&gt;</span>now<span class="xml-tag">&lt;/latest&gt;</span>
+        <span class="xml-tag">&lt;/search&gt;</span>
+      <span class="xml-tag">&lt;/viz&gt;</span>
+    <span class="xml-tag">&lt;/panel&gt;</span>
+
+    <span class="xml-tag">&lt;panel&gt;</span>
+      <span class="xml-tag">&lt;title&gt;</span>⚠️ Top Security Threats<span class="xml-tag">&lt;/title&gt;</span>
+      <span class="xml-tag">&lt;table&gt;</span>
+        <span class="xml-tag">&lt;search&gt;</span>
+          <span class="xml-tag">&lt;query&gt;</span>
+            index=fortimanager sourcetype=security_events action=DENY
+            | stats count as blocked_attempts by src_ip, threat_type
+            | sort -blocked_attempts
+            | head 10
+          <span class="xml-tag">&lt;/query&gt;</span>
+          <span class="xml-tag">&lt;earliest&gt;</span>-4h<span class="xml-tag">&lt;/earliest&gt;</span>
+          <span class="xml-tag">&lt;latest&gt;</span>now<span class="xml-tag">&lt;/latest&gt;</span>
+          <span class="xml-tag">&lt;refresh&gt;</span>5m<span class="xml-tag">&lt;/refresh&gt;</span>
+        <span class="xml-tag">&lt;/search&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"drilldown"</span><span class="xml-tag">&gt;</span>cell<span class="xml-tag">&lt;/option&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"refresh.display"</span><span class="xml-tag">&gt;</span>progressbar<span class="xml-tag">&lt;/option&gt;</span>
+      <span class="xml-tag">&lt;/table&gt;</span>
+    <span class="xml-tag">&lt;/panel&gt;</span>
+  <span class="xml-tag">&lt;/row&gt;</span>
+
+  <span class="xml-comment">&lt;!-- Performance Monitoring --&gt;</span>
+  <span class="xml-tag">&lt;row&gt;</span>
+    <span class="xml-tag">&lt;panel&gt;</span>
+      <span class="xml-tag">&lt;title&gt;</span>⚡ System Performance Metrics<span class="xml-tag">&lt;/title&gt;</span>
+      <span class="xml-tag">&lt;chart&gt;</span>
+        <span class="xml-tag">&lt;search&gt;</span>
+          <span class="xml-tag">&lt;query&gt;</span>
+            index=fortimanager sourcetype=performance_metrics
+            | timechart span=5m avg(cpu_usage) as "CPU %" avg(memory_usage) as "Memory %" avg(session_count) as "Sessions"
+          <span class="xml-tag">&lt;/query&gt;</span>
+          <span class="xml-tag">&lt;earliest&gt;</span>-2h<span class="xml-tag">&lt;/earliest&gt;</span>
+          <span class="xml-tag">&lt;latest&gt;</span>now<span class="xml-tag">&lt;/latest&gt;</span>
+          <span class="xml-tag">&lt;refresh&gt;</span>2m<span class="xml-tag">&lt;/refresh&gt;</span>
+        <span class="xml-tag">&lt;/search&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"charting.chart"</span><span class="xml-tag">&gt;</span>line<span class="xml-tag">&lt;/option&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"charting.legend.placement"</span><span class="xml-tag">&gt;</span>bottom<span class="xml-tag">&lt;/option&gt;</span>
+        <span class="xml-tag">&lt;option</span> <span class="xml-attr">name=</span><span class="xml-value">"charting.axisTitleY.text"</span><span class="xml-tag">&gt;</span>Usage (%)<span class="xml-tag">&lt;/option&gt;</span>
+      <span class="xml-tag">&lt;/chart&gt;</span>
+    <span class="xml-tag">&lt;/panel&gt;</span>
+  <span class="xml-tag">&lt;/row&gt;</span>
+<span class="xml-tag">&lt;/dashboard&gt;</span></div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2 class="section-title">⚙️ Splunk HEC Configuration</h2>
+
+            <div class="xml-container">
+                <div class="xml-header">
+                    <div class="xml-title">📋 HEC Setup Commands</div>
+                    <button class="copy-btn" onclick="copyXML('hec-config')">Copy Config</button>
+                </div>
+                <div class="xml-code" id="hec-config"><span class="xml-comment"># Splunk HTTP Event Collector 설정</span>
+
+<span class="xml-comment"># 1. HEC Token 생성</span>
+Token Name: FortiManager-PolicyLookup
+Token Value: 8f7a2b4e-1234-5678-90ab-cdef12345678
+Source Type: fortimanager_policy
+Index: fortimanager
+
+<span class="xml-comment"># 2. 인덱스 생성</span>
+splunk add index fortimanager
+
+<span class="xml-comment"># 3. 데이터 전송 테스트</span>
+curl -k https://your-splunk-server:8088/services/collector/event \
+  -H "Authorization: Splunk 8f7a2b4e-1234-5678-90ab-cdef12345678" \
+  -d '{
+    "time": 1702345678,
+    "source": "FortiManager",
+    "sourcetype": "policy_lookup",
+    "event": {
+      "device": "PERIMETER-FW-001",
+      "src_ip": "192.168.1.100",
+      "dst_ip": "10.0.50.200",
+      "service": "HTTPS",
+      "policy_id": 1842,
+      "action": "ALLOW",
+      "lookup_time_ms": 45
+    }
+  }'
+
+<span class="xml-comment"># 4. 대시보드 설치</span>
+<span class="xml-comment"># Settings > User Interface > Views > New View에서 위 XML 붙여넣기</span></div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2 class="section-title">🚀 Quick Start Guide</h2>
+
+            <div class="preview-section" style="grid-template-columns: 1fr;">
+                <div class="dashboard-preview">
+                    <div class="preview-title">5분 만에 구축하기</div>
+                    <div style="text-align: left; line-height: 1.6; color: #e6edf3;">
+                        <p><strong>1. Splunk 설정</strong></p>
+                        <p>• Settings → Data Inputs → HTTP Event Collector</p>
+                        <p>• 새 토큰 생성 및 fortimanager 인덱스 설정</p>
+                        <br>
+                        <p><strong>2. XML 대시보드 생성</strong></p>
+                        <p>• Settings → User Interface → Views → New View</p>
+                        <p>• 위의 XML 코드 전체 복사하여 붙여넣기</p>
+                        <br>
+                        <p><strong>3. FortiManager 연동</strong></p>
+                        <p>• Policy Lookup API 활성화</p>
+                        <p>• HEC로 이벤트 데이터 전송 설정</p>
+                        <br>
+                        <p><strong>4. 실시간 모니터링 시작!</strong></p>
+                        <p>• 대시보드에서 실시간 보안 현황 확인</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyXML(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.innerText || element.textContent;
+
+            navigator.clipboard.writeText(text).then(() => {
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = '✓ Copied!';
+                button.classList.add('copied');
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                const button = event.target;
+                button.textContent = '✓ Copied!';
+                setTimeout(() => button.textContent = 'Copy XML', 2000);
+            });
+        }
+
+        // 실시간 통계 애니메이션
+        setInterval(() => {
+            const statNumbers = document.querySelectorAll('.stat-number');
+            statNumbers[0].textContent = Math.floor(Math.random() * 10 + 1050);
+            statNumbers[3].innerHTML = (Math.random() * 0.5 + 2.2).toFixed(1) + 'TB';
+        }, 5000);
+    </script>
+</body>
+</html>

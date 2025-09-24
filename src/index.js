@@ -482,6 +482,10 @@ curl -k https://splunk.example.com:8088/services/collector/event \\
 </html>
 `;
 
+// XML Demo HTML과 Setup Guide HTML을 문자열로 import (실제로는 별도 파일에서 읽어올 수 있음)
+const xmlDemoHTML = `<!-- XML Demo HTML content will be loaded here -->`;
+const setupGuideHTML = `<!-- Setup Guide HTML content will be loaded here -->`;
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -500,10 +504,333 @@ export default {
       return new Response(null, { headers });
     }
 
-    // 메인 대시보드 반환
-    return new Response(dashboardHTML, {
-      status: 200,
-      headers
-    });
+    // 라우팅 처리
+    switch (url.pathname) {
+      case '/xml':
+      case '/xml-demo':
+        // XML 데모 페이지
+        return new Response(\`<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XML Demo - FortiManager Splunk Integration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1e1e2e;
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #4CAF50;
+            margin-bottom: 30px;
+        }
+        .xml-container {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        pre {
+            white-space: pre-wrap;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .nav-btn {
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛡️ Splunk XML Dashboard Generator</h1>
+        <p>FortiManager Security Operations - Ready-to-Use XML Templates</p>
+    </div>
+
+    <div class="xml-container">
+        <button class="copy-btn" onclick="copyXML()">Copy XML</button>
+        <pre id="xmlContent">&lt;dashboard version="1.1" theme="dark"&gt;
+  &lt;label&gt;FortiManager Security Operations Dashboard&lt;/label&gt;
+  &lt;description&gt;Enterprise-grade security monitoring for 1000+ devices&lt;/description&gt;
+
+  &lt;row&gt;
+    &lt;panel&gt;
+      &lt;title&gt;🛡️ Device Health Status&lt;/title&gt;
+      &lt;single&gt;
+        &lt;search&gt;
+          &lt;query&gt;
+            index=fortimanager sourcetype=fmg_device_status
+            | stats count(eval(status="up")) as up_count, count as total
+            | eval percentage=round(up_count/total*100,2)
+            | fields percentage
+          &lt;/query&gt;
+          &lt;earliest&gt;-5m&lt;/earliest&gt;
+          &lt;latest&gt;now&lt;/latest&gt;
+          &lt;refresh&gt;30s&lt;/refresh&gt;
+        &lt;/search&gt;
+        &lt;option name="underLabel"&gt;Device Availability&lt;/option&gt;
+        &lt;option name="unit"&gt;%&lt;/option&gt;
+        &lt;option name="rangeColors"&gt;["0xDC4E41","0xF1813F","0x53A051"]&lt;/option&gt;
+        &lt;option name="rangeValues"&gt;[0,95,98]&lt;/option&gt;
+      &lt;/single&gt;
+    &lt;/panel&gt;
+  &lt;/row&gt;
+
+  &lt;row&gt;
+    &lt;panel&gt;
+      &lt;title&gt;📊 Policy Lookup Requests&lt;/title&gt;
+      &lt;chart&gt;
+        &lt;search&gt;
+          &lt;query&gt;
+            index=fortimanager sourcetype=policy_lookup
+            | timechart span=1m count by device_name
+          &lt;/query&gt;
+          &lt;earliest&gt;-1h&lt;/earliest&gt;
+          &lt;latest&gt;now&lt;/latest&gt;
+          &lt;refresh&gt;1m&lt;/refresh&gt;
+        &lt;/search&gt;
+        &lt;option name="charting.chart"&gt;area&lt;/option&gt;
+        &lt;option name="charting.legend.placement"&gt;right&lt;/option&gt;
+      &lt;/chart&gt;
+    &lt;/panel&gt;
+  &lt;/row&gt;
+&lt;/dashboard&gt;</pre>
+    </div>
+
+    <div class="xml-container">
+        <h3>🚀 HEC 설정</h3>
+        <button class="copy-btn" onclick="copyHEC()">Copy HEC</button>
+        <pre id="hecContent"># Splunk HEC Token 설정
+Token Name: FortiManager-PolicyLookup
+Source Type: fortimanager_policy
+Index: fortimanager
+
+# 테스트 명령어
+curl -k https://splunk.example.com:8088/services/collector/event \\
+  -H "Authorization: Splunk YOUR_TOKEN_HERE" \\
+  -d '{
+    "time": 1702345678,
+    "source": "FortiManager",
+    "sourcetype": "policy_lookup",
+    "event": {
+      "device": "PERIMETER-FW-001",
+      "src_ip": "192.168.1.100",
+      "dst_ip": "10.0.50.200",
+      "service": "HTTPS",
+      "policy_id": 1842,
+      "action": "ALLOW"
+    }
+  }'</pre>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+        <a href="/" class="nav-btn">← 메인 대시보드</a>
+        <a href="/setup" class="nav-btn">설정 가이드 →</a>
+    </div>
+
+    <script>
+        function copyXML() {
+            const content = document.getElementById('xmlContent').textContent;
+            navigator.clipboard.writeText(content).then(() => {
+                document.querySelector('.copy-btn').textContent = '✓ Copied!';
+                setTimeout(() => document.querySelector('.copy-btn').textContent = 'Copy XML', 2000);
+            });
+        }
+
+        function copyHEC() {
+            const content = document.getElementById('hecContent').textContent;
+            navigator.clipboard.writeText(content).then(() => {
+                event.target.textContent = '✓ Copied!';
+                setTimeout(() => event.target.textContent = 'Copy HEC', 2000);
+            });
+        }
+    </script>
+</body>
+</html>\`, {
+          status: 200,
+          headers
+        });
+
+      case '/setup':
+      case '/setup-guide':
+        // 설정 가이드 페이지
+        return new Response(\`<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설정 가이드 - Splunk & FortiNet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1e1e2e;
+            color: white;
+            padding: 20px;
+            margin: 0;
+            line-height: 1.6;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #4CAF50;
+            margin-bottom: 30px;
+        }
+        .step {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 30px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .step h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+        .code-block {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .nav-btn {
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 Splunk & FortiNet 연동 설정 가이드</h1>
+        <p>단계별 상세 설정 방법</p>
+    </div>
+
+    <div class="step">
+        <h3>1단계: Splunk HEC (HTTP Event Collector) 설정</h3>
+        <p><strong>접속 경로:</strong> Settings → Data Inputs → HTTP Event Collector → New Token</p>
+        <div class="code-block">
+Name: FortiManager-PolicyLookup
+Source Type: fortimanager_policy
+Index: fortimanager
+Enable Indexer Acknowledgment: Yes
+        </div>
+        <p><strong>⚠️ 주의:</strong> 생성된 토큰 값은 안전한 곳에 보관하세요.</p>
+    </div>
+
+    <div class="step">
+        <h3>2단계: Splunk Index 생성</h3>
+        <p><strong>접속 경로:</strong> Settings → Indexes → New Index</p>
+        <div class="code-block">
+# CLI 명령어
+./splunk add index fortimanager
+
+# 권장 설정:
+Index Name: fortimanager
+Max Size: 10GB
+Max Buckets: Hot=10, Warm=20
+        </div>
+    </div>
+
+    <div class="step">
+        <h3>3단계: FortiManager API 활성화</h3>
+        <p><strong>FortiManager CLI에서 실행:</strong></p>
+        <div class="code-block">
+config system admin setting
+    set gui-curl-timeout 120
+    set gui-polling-interval 10
+end
+
+config system global
+    set fmg-status enable
+end
+        </div>
+    </div>
+
+    <div class="step">
+        <h3>4단계: FortiGate Policy Lookup 설정</h3>
+        <p><strong>각 FortiGate에서 실행:</strong></p>
+        <div class="code-block">
+config system settings
+    set gui-policy-lookup enable
+end
+
+# 또는 GUI: System → Feature Visibility → Policy Lookup 체크
+        </div>
+    </div>
+
+    <div class="step">
+        <h3>5단계: 대시보드 XML 설치</h3>
+        <p><strong>접속 경로:</strong> Settings → User Interface → Views → New View → Advanced XML</p>
+        <p>제공된 XML 코드를 복사하여 붙여넣습니다.</p>
+    </div>
+
+    <div class="step">
+        <h3>6단계: 연결 테스트</h3>
+        <div class="code-block">
+# HEC 연결 테스트
+curl -k https://your-splunk:8088/services/collector/event \\
+  -H "Authorization: Splunk YOUR_TOKEN" \\
+  -d '{"event": {"test": "connection"}, "sourcetype": "fortimanager_policy"}'
+
+# 성공 응답: {"text":"Success","code":0}
+        </div>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+        <a href="/" class="nav-btn">← 메인 대시보드</a>
+        <a href="/xml" class="nav-btn">XML 복사하기 →</a>
+    </div>
+</body>
+</html>\`, {
+          status: 200,
+          headers
+        });
+
+      default:
+        // 메인 대시보드 반환 (navigation 추가)
+        return new Response(dashboardHTML.replace(
+          '</body>',
+          \`
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+        <a href="/xml" style="background: #4CAF50; color: white; text-decoration: none; padding: 10px 15px; border-radius: 5px; margin: 5px; display: inline-block; font-size: 14px;">📝 XML 복사</a>
+        <a href="/setup" style="background: #2196F3; color: white; text-decoration: none; padding: 10px 15px; border-radius: 5px; margin: 5px; display: inline-block; font-size: 14px;">⚙️ 설정가이드</a>
+    </div>
+</body>\`
+        ), {
+          status: 200,
+          headers
+        });
+    }
   }
 };
